@@ -1,17 +1,13 @@
-from diffusers import DiffusionPipeline
+#### Link to diffusers tutorial : https://huggingface.co/docs/diffusers/using-diffusers/write_own_pipeline
 
-pipe = DiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5")
-pipe = pipe.to("mps")
+import torch
+from diffusers import DDPMScheduler, UNet2DModel
 
-# Recommended if your computer has < 64 GB of RAM
-pipe.enable_attention_slicing()
+unet = UNet2DModel()
 
-prompt = "a photo of an astronaut riding a horse on mars"
+#### print number of parameters in unet
+print(sum(p.numel() for p in unet.parameters() if p.requires_grad))
 
-# First-time "warmup" pass if PyTorch version is 1.13 (see explanation above)
-_ = pipe(prompt, num_inference_steps=1)
-
-# Results match those from the CPU device after the warmup pass.
-image = pipe(prompt).images[0]
-
-image.save("image.png")
+#### give random input to unet 
+inp = torch.rand(1, 3, 256, 256)
+output = unet(inp, 0)
