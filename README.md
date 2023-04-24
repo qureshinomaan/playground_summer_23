@@ -6,4 +6,6 @@ Things to implement :
   * Setup mujoco on mac.
 * Conditional Diffusion Models. 
   * diffusers + mnist
+  * diffusers + conditional mnist
+* Transformer implementation
 * Release library for Motion Primitives. 
