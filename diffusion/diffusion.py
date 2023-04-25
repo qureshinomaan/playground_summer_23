@@ -1,8 +1,19 @@
 #### Link to diffusers tutorial : https://huggingface.co/docs/diffusers/using-diffusers/write_own_pipeline
 
 import torch
+import wandb
 from diffusers import DDPMScheduler, UNet1DModel
 
+####  Wandb login
+wandb.login()
+run = wandb.init(
+    # Set the project where this run will be logged
+    project="diffusion",
+    # Track hyperparameters and run metadata
+    config={
+    })
+
+#### Defining the model
 in_channels = 1
 out_channels = 1
 device = 'cuda'
@@ -40,7 +51,7 @@ print(torch.nn.functional.pad(example_data,(2, 2, 2, 2)).shape)
 
 #### Defining the training parameters
 learning_rate = 1e-4
-num_epochs = 10
+num_epochs = 100
 
 from diffusers.optimization import get_cosine_schedule_with_warmup
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
@@ -84,4 +95,43 @@ for epoch in range(num_epochs):
 
     #### print the epoch and loss
     print('epoch: ', epoch, '  loss: ', loss.item())
+    run.log({"loss" : loss.item(),})
+
+
+#### Model generation visualization
+from diffusers import DDPMPipeline
+pipeline = DDPMPipeline(model, noise_scheduler)
+with torch.no_grad():
+    # initialize action from Guassian noise
+    B = 10
+    noisy_data = torch.randn(
+        (B, in_channels, model.sample_size), device=device)
+#     naction = noisy_action
+
+#     # init scheduler
+#     noise_scheduler.set_timesteps(num_diffusion_iters)
+
+    for k in noise_scheduler.timesteps:
+        # predict noise
+        noise_pred = model(
+            sample=noisy_data, 
+            timestep=k,
+        ).sample
+
+        # inverse diffusion step (remove noise)
+        noisy_data = noise_scheduler.step(
+            model_output=noise_pred,
+            timestep=k,
+            sample=noisy_data
+        ).prev_sample
+    
+
+import matplotlib.pyplot as plt
+
+images = noisy_data.reshape(noisy_data.shape[0], 1, 32, 32).repeat(1, 3, 1, 1).permute(0, 2, 3, 1).detach().cpu().numpy()
+fig, axs = plt.subplots(1, 4, figsize=(16, 4))
+for i in range(4):
+    axs[i].imshow(images[i])
+    axs[i].set_axis_off()
+fig.show()
 
