@@ -5,7 +5,8 @@ Things to implement :
 * Policy Gradients. 
   * Setup mujoco on mac.
 * Conditional Diffusion Models. 
-  * diffusers + mnist
-  * diffusers + conditional mnist
+  * diffusers + UNet1D + mnist
+  * diffusers + UNet2D + mnist
+  * diffusers + Unet2D + conditional mnist
 * Transformer implementation
 * Release library for Motion Primitives. 
